@@ -21,7 +21,9 @@
     "css": "node bin/sam.js css -o docs/paper.css",
     "check": "node scripts/check-sam.mjs",
     "test:kv": "node scripts/test-kv-layout.mjs",
-    "test:agent-cases": "node scripts/test-agent-cases.mjs"
+    "test:agent-cases": "node scripts/test-agent-cases.mjs",
+    "test:leakage": "node scripts/check-leakage.mjs",
+    "test": "node scripts/check-sam.mjs && node scripts/check-leakage.mjs && node scripts/test-agent-cases.mjs && node scripts/test-kv-layout.mjs"
   },
   "keywords": [
     "llm",

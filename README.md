@@ -73,10 +73,14 @@ sam render draft.md -o out.html --css-href paper.css --no-open
 
 ```bash
 npm run build
-npm run check          # 机读：USAGE/SKILL/kv CSS 等
-npm run test:kv        # kv 1–6 渲染 +（有 Chrome 时）布局探测
+npm run check             # 机读：USAGE/SKILL/kv CSS/limits 语义锚点等
+npm run test:leakage      # 指令泄漏 + limits 滥用夹具（含 Lab 反例）
+npm run test:kv           # kv 1–6 渲染 +（有 Chrome 时）布局探测
 npm run test:agent-cases  # 期望草稿可渲染（非真实模型测试）
+npm test                  # 上述机读检查合集
 ```
+
+第三轮重点：阶段 A 规划不得写入读者正文；`limits` 仅真实配额；强制图须有项目特有信息价值；不套 A/B/C/D。详见 `skills/sam/SKILL.md` 与 `tests/leakage/`、`tests/agent-cases/`。
 
 ## 许可
 
