@@ -1094,9 +1094,9 @@ var init_temml = __esm({
 // src/cli.js
 init_assets();
 import { parseArgs } from "node:util";
-import { readFileSync as readFileSync6, writeFileSync as writeFileSync4, mkdirSync as mkdirSync2, existsSync as existsSync3, rmSync as rmSync4 } from "node:fs";
-import { join as join6, resolve as resolve4, dirname as dirname3, basename as basename3, sep as sep3 } from "node:path";
-import { spawn as spawn2 } from "node:child_process";
+import { readFileSync as readFileSync5, writeFileSync as writeFileSync3, mkdirSync as mkdirSync2, existsSync as existsSync3, rmSync as rmSync3 } from "node:fs";
+import { join as join5, resolve as resolve3, dirname as dirname2, basename as basename2, sep as sep2 } from "node:path";
+import { spawn } from "node:child_process";
 
 // src/parse.js
 init_registry2();
@@ -1262,15 +1262,15 @@ function unquote(v) {
   return /^(["']).*\1$/.test(s) ? s.slice(1, -1) : s;
 }
 function stripLineComment(line) {
-  let quote = "";
+  let quote2 = "";
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
-    if (quote) {
-      if (c === quote) quote = "";
+    if (quote2) {
+      if (c === quote2) quote2 = "";
       continue;
     }
     if (c === '"' || c === "'") {
-      quote = c;
+      quote2 = c;
       continue;
     }
     if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i);
@@ -7322,9 +7322,6 @@ function codeBlock(block2, ctx) {
   }
 }
 var hasDelta = (html) => html.includes('class="am-delta-bar"');
-function withoutUpdateNotice(html) {
-  return html;
-}
 function shell({ meta, language, body, source, cssHref }) {
   const root = { lang: language.htmlLang, dir: language.dir, theme: "paper", mode: meta.mode, style: meta.style };
   const cssOpts = {
@@ -7357,6 +7354,55 @@ ${source ? sourceTag(source) : ""}
 </body>
 </html>
 `;
+}
+
+// src/lint/leak.js
+var RULES = [
+  { rule: "leak/must", msg: "\u89C4\u5212\u53E3\u4EE4\u6CC4\u6F0F\u2014\u2014\u8BFB\u8005\u53EA\u9700\u8981\u5185\u5BB9\uFF0C\u4E0D\u9700\u8981\u77E5\u9053\u4F60\u9009\u4E86\u54EA\u4E2A\u7EC4\u4EF6", re: /必须\s*(?:用|画|改用|使用)?\s*`?(?:flow|sequence|tree|timeline|er)\b/i },
+  { rule: "leak/must-en", msg: "\u89C4\u5212\u53E3\u4EE4\u6CC4\u6F0F\uFF08\u82F1\u6587\uFF09\u2014\u2014\u8BFB\u8005\u53EA\u9700\u8981\u5185\u5BB9\uFF0C\u4E0D\u9700\u8981\u77E5\u9053\u4F60\u9009\u4E86\u54EA\u4E2A\u7EC4\u4EF6", re: /\b(?:must|should|need\s+to)\s+(?:use|be|show|draw)\s+(?:a\s+|an\s+)?`?(?:flow|sequence|tree|timeline|er)\b/i },
+  { rule: "leak/steps", msg: "\u89E6\u53D1\u6761\u4EF6\u6CC4\u6F0F\u2014\u2014\u300C\u22653 \u6B65\u300D\u662F\u4F60\u7684\u9009\u578B\u9608\u503C\uFF0C\u4E0D\u662F\u5185\u5BB9", re: /(?:过程|步骤)\s*[≥>=]{1,2}\s*3\s*步|[（(]\s*≥\s*3\s*步\s*[）)]/ },
+  { rule: "leak/skill", msg: "\u300C\u6839\u636E Skill\u300D\u5143\u6307\u4EE4\u6CC4\u6F0F", re: /(?:根据|按|依照|按照)\s*(?:本\s*)?(?:Skill|技能)|per\s+the\s+skill|the\s+skill\s+requires/i },
+  { rule: "leak/shape", msg: "\u89C4\u5212\u672F\u8BED\u300C\u4FE1\u606F\u5F62\u72B6/\u7ED3\u6784\u300D\u6CC4\u6F0F", re: /信息(?:形状|结构)是|(?:the\s+)?information\s+(?:shape|structure)\s+is/i },
+  { rule: "leak/discipline", msg: "\u5199\u4F5C\u7EAA\u5F8B\u53E3\u4EE4\u6CC4\u6F0F", re: /禁止只(?:用|以)\s*(?:文字|段落|annot|callout)|do\s+not\s+use\s+(?:only\s+)?(?:text|prose)\s+instead/i },
+  { rule: "leak/selection", msg: "\u9009\u578B\u72EC\u767D\u6CC4\u6F0F\u2014\u2014\u6BD4\u8F83\u7EC4\u4EF6\u7684\u8BDD\u4E5F\u5C5E\u4E8E\u5185\u90E8\u89C4\u5212", re: /limits\s*比[^。\n]{0,12}(?:图|合适)|比架构图合适|limits\s+(?:is\s+)?(?:better|more\s+appropriate)\s+than/i }
+];
+var TENS_OF_TEN = /\/\s*(?:max\s+)?10\s*\|[^|\n]*分/;
+var SCORE_LABEL = /(适合度|推荐指数|评分|主观|满分|\bscore\b|\brating\b|\bgrade\b)/i;
+var FRACTION = /\/\s*(?:max\s+)?\d+/;
+var isSubjectiveScore = (line) => TENS_OF_TEN.test(line) || SCORE_LABEL.test(line) && FRACTION.test(line);
+var quote = (hit) => `\u300C${hit.replace(/\s+/g, " ").trim().slice(0, 28)}\u300D`;
+function lintContent(doc2) {
+  if (doc2.meta?.sam_meta === true || doc2.meta?.sam_meta === "true") return [];
+  const warnings = [];
+  const scan = (text, line) => {
+    for (const r of RULES) {
+      const hit = text.match(r.re);
+      if (hit) warnings.push({ line, rule: r.rule, message: `${r.msg}${quote(hit[0])}`, suggestion: "\u5220\u6389\u8FD9\u53E5\uFF0C\u5199\u8BFB\u8005\u7528\u5F97\u4E0A\u7684\u4E8B\u5B9E" });
+    }
+  };
+  const scanLimits = (text, line) => {
+    for (const raw of text.split(/\r?\n/)) {
+      const l3 = raw.trim();
+      if (isSubjectiveScore(l3)) {
+        warnings.push({ line, rule: "limits/subjective", message: `\u4E3B\u89C2\u6253\u5206\u4E0D\u80FD\u753B\u6210 limits \u8FDB\u5EA6\u6761\uFF1A${l3.slice(0, 36)}`, suggestion: "\u6539\u7528\u5BF9\u6BD4\u8868\u6216\u6587\u5B57" });
+      }
+    }
+  };
+  if (doc2.meta?.title) scan(String(doc2.meta.title), 1);
+  for (const b of doc2.intro) {
+    if (!b.text) continue;
+    scan(b.text, b.line);
+    if (b.lang === "limits") scanLimits(b.text, b.line);
+  }
+  for (const p of doc2.panels) {
+    if (p.title) scan(p.title, p.line ?? 1);
+    for (const b of p.blocks) {
+      if (!b.text) continue;
+      scan(b.text, b.line);
+      if (b.lang === "limits") scanLimits(b.text, b.line);
+    }
+  }
+  return warnings;
 }
 
 // src/cli.js
@@ -7401,104 +7447,6 @@ function writeState(home, patch) {
 `);
   renameSync(tmp, statePath(home));
   return next;
-}
-
-// src/update.js
-import { spawn } from "node:child_process";
-var UPDATE = Object.freeze({
-  checkEveryDays: 7,
-  hintEveryDays: 3,
-  timeoutMs: 5e3,
-  url: "https://raw.githubusercontent.com/CannonPanda/sam/main/package.json",
-  highlightsUrl: "https://raw.githubusercontent.com/CannonPanda/sam/main/highlights.json"
-});
-var HIGHLIGHTS = Object.freeze({ lines: 3, chars: 80 });
-var LANGUAGE_ID = /^[a-z]{2,3}(-[A-Za-z]{2,8})*$/;
-function parseHighlights(data, version) {
-  if (!data || typeof data !== "object" || Array.isArray(data) || data.version !== version) return null;
-  const lists = Object.entries(data).flatMap(([id, lines]) => {
-    if (!LANGUAGE_ID.test(id) || !Array.isArray(lines)) return [];
-    const kept = lines.filter((l3) => typeof l3 === "string" && l3.trim() && l3.length <= HIGHLIGHTS.chars && !/[\u0000-\u001f\u007f]/.test(l3)).slice(0, HIGHLIGHTS.lines).map((l3) => l3.trim());
-    return kept.length ? [[id, kept]] : [];
-  });
-  return lists.length ? Object.fromEntries(lists) : null;
-}
-var SEMVER = /^v?(\d+)\.(\d+)\.(\d+)$/;
-function parseVersion(v) {
-  const m = String(v).trim().match(SEMVER);
-  return m ? m.slice(1, 4).map(Number) : null;
-}
-function newer(a, b) {
-  const pa = parseVersion(a);
-  const pb = parseVersion(b);
-  if (!pa || !pb) return false;
-  const i = pa.findIndex((n, k2) => n !== pb[k2]);
-  return i !== -1 && pa[i] > pb[i];
-}
-var UPDATE_COMMANDS = Object.freeze({
-  plugin: "claude plugin update answer-me-with-html@answer-me-with-html",
-  repo: "git pull && npm install",
-  skills: "npx skills update answer-me-with-html -y",
-  dsh: "dsh plugin --profile <profile> up <package>"
-});
-function installMethod(scriptPath = "") {
-  if (/[\\/]\.claude[\\/]plugins[\\/]/.test(scriptPath)) return "plugin";
-  if (/[\\/]bin[\\/]am\.js$/.test(scriptPath)) return "repo";
-  if (/[\\/]\.dsh[\\/]profiles[\\/][^\\/]+[\\/]node_modules[\\/]/.test(scriptPath)) return "dsh";
-  return "skills";
-}
-var DSH_PATH = /[\\/]\.dsh[\\/]profiles[\\/]([^\\/]+)[\\/]node_modules[\\/]((?:@[^\\/]+[\\/])?[^\\/]+)/;
-var PROFILE_NAME = /^[\w.-]+$/;
-var PACKAGE_NAME = /^(@[a-z0-9][\w.-]*\/)?[a-z0-9][\w.-]*$/i;
-function dshUpdateCommand(scriptPath = "") {
-  const m = scriptPath.match(DSH_PATH);
-  if (!m) return UPDATE_COMMANDS.dsh;
-  const pkg = m[2].replace(/\\/g, "/");
-  return `dsh plugin --profile ${PROFILE_NAME.test(m[1]) ? m[1] : "<profile>"} up ${PACKAGE_NAME.test(pkg) ? pkg : "<package>"}`;
-}
-function updateCommand(scriptPath = "") {
-  const method = installMethod(scriptPath);
-  if (method === "plugin") {
-    return `run ${UPDATE_COMMANDS.plugin} in a terminal (or click Update now on the Installed tab of /plugin), then /reload-plugins`;
-  }
-  if (method === "repo") return `run ${UPDATE_COMMANDS.repo} in the sam repository`;
-  if (method === "dsh") return `run ${dshUpdateCommand(scriptPath)}`;
-  return `run ${UPDATE_COMMANDS.skills}`;
-}
-var updateEnabled = (env, config) => !(config.update_check === false || env.CI || env.AM_NO_UPDATE_CHECK);
-function updateHint(state, current, scriptPath, now = Date.now()) {
-  if (!newer(state.latestVersion, current)) return null;
-  if (state.lastUpdateHint && now - state.lastUpdateHint < UPDATE.hintEveryDays * DAY) return null;
-  return `! Update hint: Answer me with HTML ${state.latestVersion} is available (current ${current}). Ask the user whether to update: ${updateCommand(scriptPath)}.`;
-}
-function shouldCheckUpdate(state, env, config, now = Date.now()) {
-  if (!updateEnabled(env, config)) return false;
-  return !state.lastUpdateCheck || now - state.lastUpdateCheck >= UPDATE.checkEveryDays * DAY;
-}
-function spawnUpdateCheck(home, scriptPath) {
-  writeState(home, { lastUpdateCheck: Date.now() });
-  try {
-    spawn(process.execPath, [scriptPath, "__update-check"], { detached: true, stdio: "ignore", env: { ...process.env, AM_HOME: home } }).on("error", () => {
-    }).unref();
-  } catch {
-  }
-}
-async function runUpdateCheck(home, fetchImpl = fetch) {
-  try {
-    const { version } = await fetchJson(fetchImpl, UPDATE.url);
-    if (!parseVersion(version)) return null;
-    const latest = version.trim();
-    const highlights = parseHighlights(await fetchJson(fetchImpl, UPDATE.highlightsUrl).catch(() => null), latest);
-    writeState(home, { latestVersion: latest, latestHighlights: highlights, lastUpdateCheck: Date.now() });
-    return latest;
-  } catch {
-    return null;
-  }
-}
-async function fetchJson(fetchImpl, url) {
-  const res = await fetchImpl(url, { signal: AbortSignal.timeout(UPDATE.timeoutMs) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
 }
 
 // src/housekeeping.js
@@ -7567,22 +7515,12 @@ function cleanHint(state, use, now = Date.now()) {
   const when = state.lastClean ? `last cleaned ${days} days ago` : "never cleaned";
   return `! Cleanup hint: the data directory uses ${mb(use.total)} (${parts}), ${when}. Ask the user whether to run am clean (deletes pages and videos older than ${CLEAN.days} days and empties the voice-over cache; am clean --all deletes everything).`;
 }
-function afterRender({ home, env, config, current, scriptPath, background, now = Date.now() }) {
+function afterRender({ home, now = Date.now() }) {
   let state = readState(home);
   if (!state.firstSeen) state = writeState(home, { firstSeen: now });
-  const hints = [];
   const c = cleanHint(state, usage(home), now);
-  if (c) {
-    hints.push(c);
-    state = writeState(home, { lastCleanHint: now });
-  }
-  const u = updateEnabled(env, config) ? updateHint(state, current, scriptPath, now) : null;
-  if (u) {
-    hints.push(u);
-    writeState(home, { lastUpdateHint: now });
-  }
-  if (background && scriptPath && shouldCheckUpdate(state, env, config, now)) spawnUpdateCheck(home, scriptPath);
-  return hints;
+  if (c) writeState(home, { lastCleanHint: now });
+  return c ? [c] : [];
 }
 
 // src/config.js
@@ -7599,8 +7537,7 @@ var CONFIG_KEYS = Object.freeze({
   open: { type: "bool", default: true, label: "Open the page in the browser after it is made" },
   theme: { type: "enum", choices: CHOICES.theme, default: "paper", label: "Theme (sam is paper-only)" },
   mode: { type: "enum", choices: CHOICES.mode, default: "auto", label: "Default light/dark mode" },
-  style: { type: "enum", choices: CHOICES.style, default: "80", label: "STE writing-check strictness" },
-  update_check: { type: "bool", default: false, label: "Check for a new version (off by default in sam)" }
+  style: { type: "enum", choices: CHOICES.style, default: "80", label: "STE writing-check strictness" }
 });
 var TRUE = /* @__PURE__ */ new Set(["on", "true", "yes", "1", "\u5F00", "\u5F00\u542F", "\u6253\u5F00"]);
 var FALSE = /* @__PURE__ */ new Set(["off", "false", "no", "0", "\u5173", "\u5173\u95ED"]);
@@ -7737,266 +7674,6 @@ ${text.replace(/^\n+/, "")}`;
   return [...lines.slice(0, start), ...newLines, ...lines.slice(end)].join("\n");
 }
 
-// src/serve.js
-import { createServer } from "node:http";
-import { connect, isIP } from "node:net";
-import { networkInterfaces, uptime } from "node:os";
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { readFileSync as readFileSync5, writeFileSync as writeFileSync3, renameSync as renameSync2, rmSync as rmSync3 } from "node:fs";
-import { lstat, realpath, readFile } from "node:fs/promises";
-import { join as join5, resolve as resolve3, dirname as dirname2, basename as basename2, sep as sep2 } from "node:path";
-var DEFAULT_PORT = 8765;
-var HOST = "127.0.0.1";
-var LAN_BIND = "0.0.0.0";
-var TOKEN_LENGTH = 22;
-var PREFIX2 = Object.freeze({ p: "pages", v: "videos" });
-var PREFIX_OF = Object.freeze({ pages: "p", videos: "v" });
-var LOOPBACK_HOST = /^(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?$/i;
-function lanRank(address) {
-  const [a, b] = address.split(".").map(Number);
-  if (a === 192 && b === 168) return 0;
-  if (a === 10) return 1;
-  if (a === 172 && b >= 16 && b <= 31) return 2;
-  return 3;
-}
-var compareOctets = (x2, y2) => {
-  const [p, q3] = [x2, y2].map((address) => address.split(".").map(Number));
-  const i = p.findIndex((n, k2) => n !== q3[k2]);
-  return i === -1 ? 0 : p[i] - q3[i];
-};
-function lanIPv4Addresses(interfaces = networkInterfaces()) {
-  return [...new Set(Object.values(interfaces).flatMap((entries) => entries ?? []).filter(({ address, family, internal }) => (family === "IPv4" || family === 4) && !internal && isIP(address) === 4 && address !== LAN_BIND && !address.startsWith("127.") && !address.startsWith("169.254.")).map(({ address }) => address))].sort((x2, y2) => lanRank(x2) - lanRank(y2) || compareOctets(x2, y2));
-}
-function publicUrlOrigin(input) {
-  const error = () => new ServeError("--public-url must be an http:// or https:// origin without a path, credentials, query or fragment");
-  if (typeof input !== "string" || !/^https?:\/\/[^\s/?#]+\/?$/i.test(input)) throw error();
-  let url;
-  try {
-    url = new URL(input);
-  } catch {
-    throw error();
-  }
-  if (url.username || url.password || url.pathname !== "/" || url.search || url.hash || !url.hostname || url.hostname === LAN_BIND) throw error();
-  return url.origin;
-}
-function hostAllowed(host, additional) {
-  if (LOOPBACK_HOST.test(host ?? "")) return true;
-  if (typeof host !== "string") return false;
-  const value = host.toLowerCase();
-  return additional.some((allowed) => {
-    if (value === allowed.toLowerCase()) return true;
-    if (isIP(allowed) !== 4 || !value.startsWith(allowed + ":")) return false;
-    const port = value.slice(allowed.length + 1);
-    return /^[1-9][0-9]{0,4}$/.test(port) && Number(port) <= 65535;
-  });
-}
-var SANDBOX = "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads";
-var HEADERS = Object.freeze({
-  "Content-Security-Policy": `frame-ancestors 'none'; ${SANDBOX}`,
-  "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "no-referrer",
-  "Cache-Control": "no-store",
-  "Cross-Origin-Resource-Policy": "same-origin"
-});
-var ServeError = class extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ServeError";
-  }
-};
-var infoPath = (home) => join5(home, "serve.json");
-function pageToken(secret, dir, file) {
-  return createHmac("sha256", secret).update(`${dir}/${file}`).digest("base64url").slice(0, TOKEN_LENGTH);
-}
-function pageLink({ port, secret, baseUrl }, dir, file) {
-  const origin = baseUrl ?? `http://${HOST}:${port}`;
-  return `${origin}/${PREFIX_OF[dir]}/${pageToken(secret, dir, file)}/${encodeURIComponent(file)}`;
-}
-function validFileName(name) {
-  return typeof name === "string" && name.length > 0 && name.endsWith(".html") && !/[/\\\0]/.test(name) && !name.includes("..");
-}
-function tokenMatches(secret, dir, file, token) {
-  const expected = Buffer.from(pageToken(secret, dir, file));
-  const given = Buffer.from(token);
-  return given.length === expected.length && timingSafeEqual(given, expected);
-}
-function alive(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-var BOOT_SLACK_MS = 5e3;
-var bootedBefore = (startedAt) => startedAt < Date.now() - uptime() * 1e3 - BOOT_SLACK_MS;
-function readServeInfo(home) {
-  try {
-    const info = JSON.parse(readFileSync5(infoPath(home), "utf8"));
-    const validBase = info?.baseUrl === void 0 || typeof info.baseUrl === "string" && publicUrlOrigin(info.baseUrl) === info.baseUrl;
-    const ok = info && Number.isInteger(info.port) && typeof info.secret === "string" && info.secret.length > 0 && Number.isFinite(info.startedAt) && !bootedBefore(info.startedAt) && alive(info.pid) && validBase;
-    return ok ? { pid: info.pid, port: info.port, secret: info.secret, baseUrl: info.baseUrl } : null;
-  } catch {
-    return null;
-  }
-}
-function serveLink(home, file) {
-  try {
-    const info = readServeInfo(home);
-    if (!info) return null;
-    const path = resolve3(file);
-    const dir = ["pages", "videos"].find((d) => dirname2(path) === resolve3(home, d));
-    const name = basename2(path);
-    return dir && validFileName(name) ? pageLink(info, dir, name) : null;
-  } catch {
-    return null;
-  }
-}
-function writeInfo(home, info) {
-  ensureHome(home);
-  const tmp = `${infoPath(home)}.${process.pid}.tmp`;
-  try {
-    rmSync3(tmp, { force: true });
-    writeFileSync3(tmp, `${JSON.stringify(info)}
-`, { mode: 384, flag: "wx" });
-    renameSync2(tmp, infoPath(home));
-  } finally {
-    rmSync3(tmp, { force: true });
-  }
-}
-function removeInfo(home, secret) {
-  try {
-    if (JSON.parse(readFileSync5(infoPath(home), "utf8")).secret === secret) rmSync3(infoPath(home), { force: true });
-  } catch {
-  }
-}
-function reply(req, res, status, type, body = "") {
-  res.writeHead(status, { ...HEADERS, "Content-Type": type, "Content-Length": Buffer.byteLength(body) });
-  res.end(req.method === "HEAD" ? void 0 : body);
-}
-var notFound = (req, res) => reply(req, res, 404, "text/plain; charset=utf-8", "Not found\n");
-async function resolvePage(home, dir, file) {
-  try {
-    const root = await realpath(join5(home, dir));
-    const path = join5(root, file);
-    if (!(await lstat(path)).isFile()) return null;
-    const real = await realpath(path);
-    return real.startsWith(root + sep2) ? real : null;
-  } catch {
-    return null;
-  }
-}
-function handler(home, secret, allowedHosts) {
-  return async (req, res) => {
-    try {
-      if (!hostAllowed(req.headers.host, allowedHosts)) return notFound(req, res);
-      if (req.method !== "GET" && req.method !== "HEAD") {
-        res.setHeader("Allow", "GET, HEAD");
-        return reply(req, res, 405, "text/plain; charset=utf-8", "Method not allowed\n");
-      }
-      const parts = req.url.split(/[?#]/)[0].split("/");
-      if (parts.length !== 4 || parts[0] !== "") return notFound(req, res);
-      const [, prefix, token, raw] = parts;
-      const dir = Object.hasOwn(PREFIX2, prefix) ? PREFIX2[prefix] : void 0;
-      if (!dir || !token || !raw) return notFound(req, res);
-      let file;
-      try {
-        file = decodeURIComponent(raw);
-      } catch {
-        return notFound(req, res);
-      }
-      if (!validFileName(file) || !tokenMatches(secret, dir, file, token)) return notFound(req, res);
-      const dest = req.headers["sec-fetch-dest"];
-      if (dest !== void 0 && dest !== "document") return notFound(req, res);
-      const real = await resolvePage(home, dir, file);
-      if (!real) return notFound(req, res);
-      const html = await readFile(real);
-      const body = LOOPBACK_HOST.test(req.headers.host) ? html : withoutUpdateNotice(html.toString("utf8"));
-      return reply(req, res, 200, "text/html; charset=utf-8", body);
-    } catch {
-      return notFound(req, res);
-    }
-  };
-}
-function listening(port, timeout = 500) {
-  return new Promise((done) => {
-    const socket = connect({ host: HOST, port });
-    const end = (up) => {
-      socket.destroy();
-      done(up);
-    };
-    socket.setTimeout(timeout, () => end(false));
-    socket.once("connect", () => end(true));
-    socket.once("error", () => end(false));
-  });
-}
-async function startServer({ home, port = DEFAULT_PORT, lan = false, publicUrl, lanAddresses }) {
-  const addresses = lan ? lanAddresses ?? lanIPv4Addresses() : [];
-  if (lan && (!addresses.length || addresses.some((address) => isIP(address) !== 4 || address === LAN_BIND || address.startsWith("127.")))) {
-    throw new ServeError("--lan needs at least one active non-loopback IPv4 interface");
-  }
-  const publicOrigin = publicUrl === void 0 ? null : publicUrlOrigin(publicUrl);
-  const allowedHosts = [...addresses, ...publicOrigin ? [new URL(publicOrigin).host] : []];
-  const running = readServeInfo(home);
-  if (running && await listening(running.port)) throw new ServeError(`am serve is already running on ${running.baseUrl ?? `http://${HOST}:${running.port}`} (pid ${running.pid}); stop it first`);
-  const secret = randomBytes(32).toString("hex");
-  const server = createServer(handler(home, secret, allowedHosts));
-  await new Promise((done, fail) => {
-    server.once("error", (e) => fail(e.code === "EADDRINUSE" ? new ServeError(`Port ${port} is already in use; pick another with am serve --port <n>`) : e));
-    server.listen(port, lan ? LAN_BIND : HOST, done);
-  });
-  const actual = server.address().port;
-  const baseUrl = publicOrigin ?? `http://${lan ? addresses[0] : HOST}:${actual}`;
-  try {
-    writeInfo(home, { pid: process.pid, port: actual, secret, startedAt: Date.now(), baseUrl });
-  } catch (e) {
-    server.closeAllConnections();
-    await new Promise((done) => server.close(done));
-    throw new ServeError(`Cannot save serve.json; server stopped: ${e.message}`);
-  }
-  let closed;
-  const close = () => {
-    closed ??= new Promise((done) => {
-      removeInfo(home, secret);
-      server.close(() => done());
-      server.closeAllConnections();
-    });
-    return closed;
-  };
-  return { port: actual, secret, close, baseUrl, addresses, lan };
-}
-async function runServe({ home, port, lan = false, publicUrl, print, fail }) {
-  let srv;
-  try {
-    srv = await startServer({ home, port, lan, publicUrl });
-  } catch (e) {
-    if (!(e instanceof ServeError)) throw e;
-    fail(`\u2717 ${e.message}`);
-    return 1;
-  }
-  return new Promise((done) => {
-    const stop = () => srv.close().then(() => done(0));
-    process.once("SIGINT", stop);
-    process.once("SIGTERM", stop);
-    process.once("SIGHUP", stop);
-    process.once("exit", () => removeInfo(home, srv.secret));
-    if (lan) {
-      print(`Serving pages on ${LAN_BIND}:${srv.port} (Ctrl-C to stop). am render prints a link for each page.`);
-      print("WARNING: --lan exposes this port on every IPv4 interface, without built-in TLS. A page link is a secret: use a trusted LAN or an HTTPS reverse proxy.");
-      for (const address of srv.addresses) print(`LAN address: http://${address}:${srv.port}`);
-    } else {
-      print(`Serving pages on http://${HOST}:${srv.port} (Ctrl-C to stop). am render prints a link for each page.`);
-      if (!publicUrl) print(`Reaching it from another computer: run ssh -L ${srv.port}:${HOST}:${srv.port} user@host there, then open the links in its browser.`);
-    }
-    if (publicUrl) {
-      print(`Public link origin: ${srv.baseUrl}`);
-      if (srv.baseUrl.startsWith("http://")) print("WARNING: --public-url uses HTTP; links and their capability tokens are not encrypted in transit.");
-    }
-  });
-}
-
 // src/cli.js
 var MAX_LISTED_WARNINGS = 20;
 var USAGE = `sam ${VERSION} \u2014 Simple answer me with html (paper-only, no toolbar/runtime)
@@ -8008,7 +7685,6 @@ Usage:
   sam lint   <file|->  [--style off|80|strict]
   sam css    [-o paper.css]   write lean paper display CSS (for iframe <link>; math/diff/delta/rtl inlined on render)
   sam config [set <key> <value> | get <key> | reset [key]]
-  sam serve  [--port 8765] [--lan] [--public-url <origin>]
   sam clean  [--days 30] [--all] [--dry-run]
   sam list
   sam help [component|format|code|image|patch|html|svg]
@@ -8178,17 +7854,13 @@ ${USAGE}`);
       return cmdCss(opts, ctx);
     case "clean":
       return cmdClean(opts, { print, fail, env });
-    case "serve":
-      return cmdServe(opts, { print, fail, env });
-    case "__update-check":
-      return await runUpdateCheck(amHome(env)) ? 0 : 1;
     case "list":
       return cmdList(ctx), 0;
     case "help":
       return cmdHelp(arg, { print, fail });
     default:
-      if (cmd === "video" || cmd === "theme") {
-        fail(`\u2717 sam has no "${cmd}" command (paper-only; use answer-me-with-html for video / multi-theme).
+      if (cmd === "video" || cmd === "theme" || cmd === "serve") {
+        fail(`\u2717 sam has no "${cmd}" command (paper-only; use answer-me-with-html for video / multi-theme / serve).
 
 ${USAGE}`);
         return 2;
@@ -8207,7 +7879,7 @@ async function withSource(arg, io, fail, fn3) {
   const cwd = io.cwd ?? process.cwd();
   let src;
   try {
-    src = arg === "-" ? await readStream(io.stdin ?? process.stdin) : readFileSync6(resolve4(cwd, arg), "utf8");
+    src = arg === "-" ? await readStream(io.stdin ?? process.stdin) : readFileSync5(resolve3(cwd, arg), "utf8");
   } catch (e) {
     fail(`\u2717 Cannot read the draft: ${e.message}`);
     return 2;
@@ -8216,7 +7888,7 @@ async function withSource(arg, io, fail, fn3) {
     fail("\u2717 The draft is empty");
     return 2;
   }
-  return fn3(src, arg === "-" ? cwd : dirname3(resolve4(cwd, arg)));
+  return fn3(src, arg === "-" ? cwd : dirname2(resolve3(cwd, arg)));
 }
 async function readStream(stream) {
   const chunks = [];
@@ -8234,7 +7906,7 @@ async function cmdRender(src, opts, ctx, baseDir) {
   const { fail, print } = ctx;
   const replaced = opts.replace === void 0 ? null : pagePath(opts.replace, ctx);
   if (replaced === false) {
-    fail(`\u2717 --replace takes a page that sam render wrote (a .html file in ${join6(amHome(ctx.env), "pages")})`);
+    fail(`\u2717 --replace takes a page that sam render wrote (a .html file in ${join5(amHome(ctx.env), "pages")})`);
     return 2;
   }
   const config = loadConfig(ctx);
@@ -8248,15 +7920,15 @@ async function cmdRender(src, opts, ctx, baseDir) {
   }
   const file = outputPath("pages", result.meta.title, opts, ctx);
   emit(result, file, ctx);
-  if (replaced && replaced !== resolve4(file)) rmSync4(replaced, { force: true });
+  if (replaced && replaced !== resolve3(file)) rmSync3(replaced, { force: true });
   const held = !opts.open && hasRetryWarnings(result) && shouldOpen(opts, ctx.env, config.values);
   if (held) print(`  Not opened because of the warnings; to render again, add --replace ${file}`);
   return finish(file, held ? { ...opts, "no-open": true } : opts, config, ctx);
 }
 var hasRetryWarnings = (result) => result.warnings.length > 0 || (result.stats.codeWarnings ?? []).length > 0 || (result.stats.mathWarnings ?? []).length > 0;
 function pagePath(arg, { env, io }) {
-  const path = resolve4(io.cwd ?? process.cwd(), arg);
-  return dirname3(path) === resolve4(amHome(env), "pages") && basename3(path).endsWith(".html") ? path : false;
+  const path = resolve3(io.cwd ?? process.cwd(), arg);
+  return dirname2(path) === resolve3(amHome(env), "pages") && basename2(path).endsWith(".html") ? path : false;
 }
 var PATCH_HELP = `Replace one panel of a rendered page in place
 
@@ -8282,10 +7954,10 @@ async function cmdPatch(htmlArg, fromArg, opts, ctx) {
     return 2;
   }
   const cwd = io.cwd ?? process.cwd();
-  const file = resolve4(cwd, htmlArg);
+  const file = resolve3(cwd, htmlArg);
   let html;
   try {
-    html = readFileSync6(file, "utf8");
+    html = readFileSync5(file, "utf8");
   } catch (e) {
     fail(`\u2717 Cannot read the HTML: ${e.message}`);
     return 2;
@@ -8299,7 +7971,7 @@ async function cmdPatch(htmlArg, fromArg, opts, ctx) {
   const from = opts.from ?? fromArg;
   let replacement;
   try {
-    replacement = !from || from === "-" ? await readStream(io.stdin ?? process.stdin) : readFileSync6(resolve4(cwd, from), "utf8");
+    replacement = !from || from === "-" ? await readStream(io.stdin ?? process.stdin) : readFileSync5(resolve3(cwd, from), "utf8");
   } catch (e) {
     fail(`\u2717 Cannot read the new panel draft: ${e.message}`);
     return 2;
@@ -8348,20 +8020,18 @@ function themeWarnings({ fail, themes: themes2 }) {
   themes2.warnings.forEach((w) => fail(`! ${w}`));
 }
 function outputPath(dir, title, opts, { env, io }) {
-  if (opts.out) return resolve4(io.cwd ?? process.cwd(), opts.out);
-  return join6(amHome(env), dir, `${slug(title)}-${stamp(new Date(io.now?.() ?? Date.now()))}.html`);
+  if (opts.out) return resolve3(io.cwd ?? process.cwd(), opts.out);
+  return join5(amHome(env), dir, `${slug(title)}-${stamp(new Date(io.now?.() ?? Date.now()))}.html`);
 }
 function writePage(file, html, env) {
-  const home = resolve4(amHome(env));
-  if (resolve4(file).startsWith(home + sep3)) ensureHome(home);
-  mkdirSync2(dirname3(file), { recursive: true });
-  writeFileSync4(file, html);
+  const home = resolve3(amHome(env));
+  if (resolve3(file).startsWith(home + sep2)) ensureHome(home);
+  mkdirSync2(dirname2(file), { recursive: true });
+  writeFileSync3(file, html);
 }
 function emit(result, file, { print, env }, note2 = "") {
   writePage(file, result.html, env);
   print(`\u2713 ${file}`);
-  const link = serveLink(amHome(env), file);
-  if (link) print(`  link: ${link}`);
   print(`  ${summaryLine(result)}${note2}`);
   if (result.stats.code?.length) print(`  code embedded from: ${result.stats.code.join(", ")}`);
   const long = result.stats.codeWarnings ?? [];
@@ -8403,20 +8073,13 @@ function summaryLine(result) {
 }
 var count = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 function finish(file, opts, config, ctx) {
-  printHints(config, ctx);
+  printHints(ctx);
   if (shouldOpen(opts, ctx.env, config.values)) (ctx.io.open ?? openFile)(file);
   return 0;
 }
-function printHints(config, { env, io, print }) {
+function printHints({ env, print }) {
   try {
-    const hints = afterRender({
-      home: amHome(env),
-      env,
-      config: config.values,
-      current: VERSION,
-      scriptPath: io.scriptPath,
-      background: Boolean(io.background)
-    });
+    const hints = afterRender({ home: amHome(env) });
     hints.forEach((h2) => print(h2));
   } catch {
   }
@@ -8436,14 +8099,6 @@ function cmdClean(opts, { print, fail, env }) {
   print(dry ? `Would delete ${count(r.files, "file")}, freeing ${mb(r.bytes)} (${scope} + voice-over cache). Run without --dry-run to delete.` : `\u2713 Deleted ${count(r.files, "file")}, freeing ${mb(r.bytes)} (${scope} + voice-over cache). Settings were kept.`);
   return 0;
 }
-function cmdServe(opts, { print, fail, env }) {
-  if (opts.port !== void 0 && !(/^\d+$/.test(opts.port.trim()) && Number(opts.port) <= 65535)) {
-    fail("\u2717 --port needs a number from 0 to 65535 (0 picks a free port)");
-    return 2;
-  }
-  const port = opts.port === void 0 ? DEFAULT_PORT : Number(opts.port);
-  return runServe({ home: amHome(env), port, lan: !!opts.lan, publicUrl: opts["public-url"], print, fail });
-}
 function cmdLint(src, opts, { print, fail }) {
   let doc2;
   try {
@@ -8459,7 +8114,14 @@ function cmdLint(src, opts, { print, fail }) {
   const language = resolveLanguage({ declared: doc2.meta.lang, text: src });
   const warnings = style === "off" ? [] : lintDoc(doc2, language);
   printWarnings(warnings, print, style);
-  return style === "strict" && warnings.length ? 1 : 0;
+  const content = lintContent(doc2);
+  printContent(content, print);
+  return style === "strict" && warnings.length || content.length ? 1 : 0;
+}
+function printContent(issues, print) {
+  if (!issues.length) return print("  Content \u2713 no planning leak");
+  print(`  Content ${count(issues.length, "issue")} (always on, even with --style off; these reach the reader \u2014 fix the draft and run again):`);
+  issues.forEach((i) => print(`  ${formatWarning(i)}`));
 }
 function printWarnings(warnings, print, style) {
   if (style === "off") return print("  STE check is off");
@@ -8540,9 +8202,9 @@ function cmdList({ print, fail, themes: themes2 }) {
 }
 async function cmdCss(opts, { print, env, io }) {
   const { paperStylesheet: paperStylesheet2 } = await Promise.resolve().then(() => (init_themes(), themes_exports));
-  const file = opts.out ? resolve4(io.cwd ?? process.cwd(), opts.out) : join6(amHome(env), "paper.css");
-  mkdirSync2(dirname3(file), { recursive: true });
-  writeFileSync4(file, paperStylesheet2());
+  const file = opts.out ? resolve3(io.cwd ?? process.cwd(), opts.out) : join5(amHome(env), "paper.css");
+  mkdirSync2(dirname2(file), { recursive: true });
+  writeFileSync3(file, paperStylesheet2());
   print(`\u2713 ${file}`);
   return 0;
 }
@@ -8577,7 +8239,7 @@ function stamp(d) {
 function openFile(file) {
   const [cmd, args] = process.platform === "darwin" ? ["open", [file]] : process.platform === "win32" ? ["cmd", ["/c", "start", "", file]] : ["xdg-open", [file]];
   try {
-    spawn2(cmd, args, { detached: true, stdio: "ignore" }).on("error", () => {
+    spawn(cmd, args, { detached: true, stdio: "ignore" }).on("error", () => {
     }).unref();
   } catch {
   }
