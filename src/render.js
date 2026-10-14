@@ -118,9 +118,19 @@ function embedImages(block, html, ctx) {
   }
 }
 
+const RAW_RISKY = /<\s*(script|iframe|object|embed|form)\b/i;
+
 function renderFence(block, ctx) {
   const { lang, args, text, line } = block;
-  if (RAW_LANGS.has(lang)) return text;
+  if (RAW_LANGS.has(lang)) {
+    if (RAW_RISKY.test(text) && ctx.stats.htmlWarnings) {
+      ctx.stats.htmlWarnings.push({
+        line,
+        message: `${lang} fence embeds markup as-is (includes <script>/<iframe>/…); only use trusted author content`,
+      });
+    }
+    return text;
+  }
   const comp = COMPONENTS.get(lang);
   if (!comp) return codeBlock(block, ctx);
   if (comp.pageOnly && ctx.video) throw new RenderError(`${lang} works on a page only; a video cannot take answers`, { line, component: lang, example: comp.example });

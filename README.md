@@ -69,6 +69,15 @@ sam render draft.md -o out.html --css-href paper.css --no-open
 - **讲义、原理页、K站 intro、iframe**：用 **sam**（干净、快）。
 - **需要主题切换、回复标注、视频讲解**：用上游 **am**。
 
+## 检查
+
+```bash
+npm run build
+npm run check          # 机读：USAGE/SKILL/kv CSS 等
+npm run test:kv        # kv 1–6 渲染 +（有 Chrome 时）布局探测
+npm run test:agent-cases  # 期望草稿可渲染（非真实模型测试）
+```
+
 ## 许可
 
 MIT（继承上游 LICENSE）。

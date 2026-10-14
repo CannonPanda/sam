@@ -18,7 +18,10 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "css": "node bin/sam.js css -o docs/paper.css"
+    "css": "node bin/sam.js css -o docs/paper.css",
+    "check": "node scripts/check-sam.mjs",
+    "test:kv": "node scripts/test-kv-layout.mjs",
+    "test:agent-cases": "node scripts/test-agent-cases.mjs"
   },
   "keywords": [
     "llm",

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="paper" data-mode="auto" data-style="off">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="sam 0.1.0">
+<title>kv in sheet panels</title>
+<link rel="stylesheet" href="./paper.css">
+</head>
+<body>
+<main class="am-sheet">
+<header class="am-head"><h1>kv in sheet panels</h1></header>
+<div class="am-frame">
+<div class="am-ruler am-ruler--top" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div><div class="am-ruler am-ruler--bottom" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div><div class="am-ruler am-ruler--left" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div><div class="am-ruler am-ruler--right" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div>
+<div class="am-grid" style="--cols: 3">
+<section class="am-panel" id="panel-A">
+<header class="am-panel-head"><span class="am-panel-id">A</span><h2>三键值</h2></header>
+<div class="am-panel-body"><div class="am-kv-host"><dl class="am-kv" data-auto="3"><div class="am-kv-cell"><dt>A</dt><dd>甲</dd></div><div class="am-kv-cell"><dt>B</dt><dd>乙</dd></div><div class="am-kv-cell"><dt>C</dt><dd>丙</dd></div></dl></div></div>
+</section>
+<section class="am-panel" id="panel-B">
+<header class="am-panel-head"><span class="am-panel-id">B</span><h2>六键值</h2></header>
+<div class="am-panel-body"><div class="am-kv-host"><dl class="am-kv" data-auto="6"><div class="am-kv-cell"><dt>A</dt><dd>1</dd></div><div class="am-kv-cell"><dt>B</dt><dd>2</dd></div><div class="am-kv-cell"><dt>C</dt><dd>3</dd></div><div class="am-kv-cell"><dt>D</dt><dd>4</dd></div><div class="am-kv-cell"><dt>E</dt><dd>5</dd></div><div class="am-kv-cell"><dt>F</dt><dd>6</dd></div></dl></div></div>
+</section>
+<section class="am-panel" id="panel-C">
+<header class="am-panel-head"><span class="am-panel-id">C</span><h2>显式两列</h2></header>
+<div class="am-panel-body"><div class="am-kv-host"><dl class="am-kv" style="--kv-cols: 2"><div class="am-kv-cell"><dt>One</dt><dd>1</dd></div><div class="am-kv-cell"><dt>Two</dt><dd>2</dd></div><div class="am-kv-cell"><dt>Three</dt><dd>3</dd></div></dl></div></div>
+</section>
+</div>
+</div>
+</main>
+<textarea id="am-source" hidden readonly aria-hidden="true">---
+title: kv in sheet panels
+lang: zh
+template: sheet
+cols: 3
+style: off
+---
+
+## 三键值
+```kv
+A: 甲
+B: 乙
+C: 丙
+```
+
+## 六键值
+```kv
+A: 1
+B: 2
+C: 3
+D: 4
+E: 5
+F: 6
+```
+
+## 显式两列
+```kv cols=2
+One: 1
+Two: 2
+Three: 3
+```
+</textarea>
+</body>
+</html>

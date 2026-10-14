@@ -203,15 +203,63 @@ code, pre, kbd { font-family: var(--font-mono); }
 .am-callout-title { font-weight: 600; margin-bottom: 4px; }
 
 /* ── kv title block ─────────────────────────── */
+/* Host is the size container so @container can restyle the grid (a container cannot query itself). */
+.am-kv-host { container-type: inline-size; container-name: am-kv; min-width: 0; width: 100%; }
 .am-kv {
-  display: grid; grid-template-columns: repeat(var(--kv-cols, 2), minmax(0, 1fr)); margin: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--kv-cols, 2), minmax(0, 1fr));
+  margin: 0;
   border-top: var(--bw) solid var(--line); border-inline-start: var(--bw) solid var(--line);
+  min-width: 0;
 }
-.am-kv-cell { border-inline-end: var(--bw) solid var(--line); border-bottom: var(--bw) solid var(--line); padding: 6px 10px 8px; min-width: 0; }
+/* Auto (no cols=): start stacked; widen by container, not viewport — sheet panels may be narrow. */
+.am-kv[data-auto] { --kv-cols: 1; }
+.am-kv-cell {
+  border-inline-end: var(--bw) solid var(--line); border-bottom: var(--bw) solid var(--line);
+  padding: 6px 10px 8px; min-width: 0; overflow-wrap: anywhere;
+}
 .am-kv-cell--wide { grid-column: 1 / -1; }
-.am-kv dt { font: 11px/1.4 var(--font-mono); color: var(--ink-2); }
-.am-kv dd { margin: 2px 0 0; font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.am-kv dt {
+  font: 11px/1.4 var(--font-mono); color: var(--ink-2);
+  min-width: 0; overflow-wrap: anywhere;
+}
+.am-kv dd {
+  margin: 2px 0 0; font-size: 14px; font-weight: 500;
+  min-width: 0; overflow-wrap: anywhere; word-break: break-word;
+}
+.am-kv dd a, .am-kv dd code { overflow-wrap: anywhere; word-break: break-word; }
 .am-kv-cell--wide dd { font-size: 17px; font-weight: 600; }
+
+/* Medium (≥320): 2 columns; for 3 / 5 items the last cell spans → 2+1 / 2+2+1 */
+@container am-kv (min-width: 320px) {
+  .am-kv[data-auto="2"],
+  .am-kv[data-auto="3"],
+  .am-kv[data-auto="4"],
+  .am-kv[data-auto="5"],
+  .am-kv[data-auto="6"] { --kv-cols: 2; }
+  .am-kv[data-auto]:not([data-auto="1"]):not([data-auto="2"]):not([data-auto="3"]):not([data-auto="4"]):not([data-auto="5"]):not([data-auto="6"]) {
+    --kv-cols: 2;
+  }
+  .am-kv[data-auto="3"] > .am-kv-cell:last-child:not(.am-kv-cell--wide),
+  .am-kv[data-auto="5"] > .am-kv-cell:last-child:not(.am-kv-cell--wide) {
+    grid-column: 1 / -1;
+  }
+}
+/* Wide (≥480): 3 items → 3 columns; 5–6 (and more) → 3 columns */
+@container am-kv (min-width: 480px) {
+  .am-kv[data-auto="3"] { --kv-cols: 3; }
+  .am-kv[data-auto="3"] > .am-kv-cell:last-child:not(.am-kv-cell--wide) { grid-column: auto; }
+  .am-kv[data-auto="5"],
+  .am-kv[data-auto="6"] { --kv-cols: 3; }
+  .am-kv[data-auto="5"] > .am-kv-cell:last-child:not(.am-kv-cell--wide) { grid-column: auto; }
+  .am-kv[data-auto]:not([data-auto="1"]):not([data-auto="2"]):not([data-auto="3"]):not([data-auto="4"]):not([data-auto="5"]):not([data-auto="6"]) {
+    --kv-cols: 3;
+  }
+}
+/* Extra-wide (≥640): 4 items → 4 columns */
+@container am-kv (min-width: 640px) {
+  .am-kv[data-auto="4"] { --kv-cols: 4; }
+}
 
 /* ── timeline ────────────────────────────── */
 .am-timeline { list-style: none; margin: 0; padding: 0; }
@@ -385,7 +433,7 @@ code, pre, kbd { font-family: var(--font-mono); }
 }
 .am-panel--bare { border: 0; background: transparent; box-shadow: none; }
 .am-panel--bare > .am-panel-body { padding: 0; }
-.am-panel--bare .am-kv { background: var(--paper); }
+.am-panel--bare .am-kv-host .am-kv, .am-panel--bare .am-kv { background: var(--paper); }
 
 
 html[data-theme="paper"]:lang(zh-Hant)[data-mode], html[data-theme="paper"]:lang(zh-TW)[data-mode], html[data-theme="paper"]:lang(zh-HK)[data-mode], html[data-theme="paper"]:lang(zh-MO)[data-mode] { --font-serif: "Iowan Old Style", Palatino, Georgia, "Songti TC", "PMingLiU", "MingLiU", "Noto Serif CJK TC", "Noto Serif TC", "Source Han Serif TC", "Songti SC", serif; }

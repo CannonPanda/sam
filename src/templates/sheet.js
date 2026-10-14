@@ -1,4 +1,4 @@
-// sheet: drawing board. Letter-numbered panels in a grid; under the blueprint theme the frame has coordinate ticks (decorative only, no interaction).
+// sheet: drawing board. Letter-numbered panels in a grid (paper-only; decorative rulers unused).
 import { panelHtml, headHtml } from './panel.js';
 
 const ruler = (side, labels) =>

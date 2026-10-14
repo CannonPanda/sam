@@ -1,4 +1,4 @@
-// sam CLI: render / patch / video / lint / theme / list / help. main() takes injected streams and environment variables, for testing.
+// sam CLI: render / patch / lint / css / list / help / config / serve / clean. main() takes injected streams and environment variables, for testing.
 
 import { parseArgs } from 'node:util';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
@@ -28,26 +28,26 @@ const MAX_LISTED_WARNINGS = 20;
 const USAGE = `sam ${VERSION} — Simple answer me with html (paper-only, no toolbar/runtime)
 
 Usage:
-  ssam render <file|->  [-o <path>] [--replace <page>] [--no-open] [--css-href <url>]
+  sam render <file|->  [-o <path>] [--replace <page>] [--no-open] [--css-href <url>]
                        [--template sheet|doc] [--style off|80|strict] [--mode auto|light|dark]
-  ssam patch  <html> --panel <title> [file|-] [--from file] [--no-open]
-  ssam lint   <file|->  [--style off|80|strict]
+  sam patch  <html> --panel <title> [file|-] [--from file] [--no-open]
+  sam lint   <file|->  [--style off|80|strict]
   sam css    [-o paper.css]   write lean paper display CSS (for iframe <link>; math/diff/delta/rtl inlined on render)
-  ssam config [set <key> <value> | get <key> | reset [key]]
-  ssam serve  [--port 8765] [--lan] [--public-url <origin>]
-  ssam clean  [--days 30] [--all] [--dry-run]
-  ssam list
-  ssam help [component|format|code|image|patch]
+  sam config [set <key> <value> | get <key> | reset [key]]
+  sam serve  [--port 8765] [--lan] [--public-url <origin>]
+  sam clean  [--days 30] [--all] [--dry-run]
+  sam list
+  sam help [component|format|code|image|patch|html|svg]
 
 - Theme is always paper. No toolbar, colophon, reply/remark, or Agent round-trip JS.
-- `-` reads stdin (heredoc). Default output: ~/.sam/pages/ (SAM_HOME / AM_HOME overrides).
+- \`-\` reads stdin (heredoc). Default output: ~/.sam/pages/ (SAM_HOME / AM_HOME overrides).
 - STE warnings: fix draft and re-run with --replace <page>.
 - --css-href emits <link rel="stylesheet"> for the shared paper.css; feature CSS is still inlined when needed.`;
 
 const FORMAT = `Draft format (extended Markdown)
 
 ---
-template: sheet        # sheet: blueprint board (default, multi-panel grid) | doc: linear explainer (one column + contents)
+template: sheet        # sheet: multi-panel grid (default) | doc: linear explainer (one column + contents)
 theme: paper           # sam is paper-only (other theme names are ignored)
 title: Page title      # or use "# Title" as the first line of the body
 subtitle: Subtitle     # optional
@@ -75,7 +75,7 @@ A -> B
 - Math in text: $x^2$ is inline; a block is a line with only $$, the TeX, and a line with only $$ (or one line: $$ E = mc^2 $$). Put a long formula in a block: a block scrolls
   inside its panel, and an inline formula may wrap after = or +. \\$ writes a dollar sign. The TeX is typeset when the page is made (Temml): no script, no network.
   $5 and $10 stay text (a closing $ has no space before it and no digit after it), and so does $PATH:$HOME (a closing $ with a letter or _ after it does not close; write $n$-th, not $n$th).
-  Code, diagrams and video take no math. In a table cell write \\vert x \\vert, not |x|. \\ref, \\eqref and \\label are not supported (they give a warning; \\tag{1} works in a block).
+  Code and diagrams take no math. In a table cell write \\vert x \\vert, not |x|. \\ref, \\eqref and \\label are not supported (they give a warning; \\tag{1} works in a block).
   TeX that cannot be read stays as raw TeX in red, with a warning and its line: fix it and render again with --replace.
 - A placeholder such as <host> is shown as text. Inside a sentence only text-level tags stay (b, i, kbd, sup, a, span, br, img ...), and tags that break the page (script, style, iframe ...) are shown as text too. Put raw markup in an html or svg fence and code in backticks.
 - Any other fence language is a code block; \`\`\`ts src=path lines=18-30 quotes real code from a file; see sam help code.
@@ -133,8 +133,14 @@ Diff blocks: show a change
 
 const RAW_HELP = `LANG — embed as-is (escape hatch)
 
-When the fence language is LANG, the content goes into the page unprocessed. Use it only when no component can show the content;
-use theme variables for colors (such as var(--ink), var(--accent)) so the content stays readable across themes and light/dark modes.
+When the fence language is LANG, the content goes into the page **unprocessed** (no Markdown, no STE, no sanitizer).
+Prefer built-in components. Use LANG only when no component can show the content.
+
+Security boundary:
+- Inline Markdown HTML is filtered (script/style/iframe … shown as text; event handlers and javascript: URLs stripped).
+- A LANG fence is **not** filtered: scripts, event handlers, and external URLs run as written. Treat the draft as trusted author content.
+- Prefer theme variables for colors (var(--ink), var(--accent)) so the block stays readable in light/dark paper mode.
+- Do not paste untrusted third-party HTML/SVG into a LANG fence.
 
 Example:
 \`\`\`LANG
@@ -203,6 +209,10 @@ export async function main(argv, io = {}) {
     case 'list': return cmdList(ctx), 0;
     case 'help': return cmdHelp(arg, { print, fail });
     default:
+      if (cmd === 'video' || cmd === 'theme') {
+        fail(`✗ sam has no "${cmd}" command (paper-only; use answer-me-with-html for video / multi-theme).\n\n${USAGE}`);
+        return 2;
+      }
       fail(`✗ Unknown command "${cmd}"\n\n${USAGE}`);
       return 2;
   }
@@ -583,13 +593,13 @@ function cmdConfig(args, { print, fail, env, themes }) {
 function cmdList({ print, fail, themes }) {
   themeWarnings({ fail, themes });
   print('Templates (template):');
-  print('  sheet   blueprint board: a grid of letter-numbered panels, for a one-screen overview (default)');
+  print('  sheet   multi-panel grid: letter-numbered panels for a one-screen overview (default)');
   print('  doc     linear explainer: one-column reading, with contents when there are 3+ panels');
   print('\nThemes (theme):');
   for (const th of themes.list('page')) print(`  ${th.name.padEnd(10)}${th.summary}`);
   print('\nComponents (fence language):');
   for (const c of COMPONENTS.values()) print(`  ${c.name.padEnd(10)}${c.summary}`);
-  print('  html/svg  embed as-is (escape hatch)');
+  print('  html/svg  embed as-is (escape hatch; unsanitized — trusted drafts only)');
   print('  <other>   code block; src=path lines=a-b quotes a file (sam help code)');
   print('\nSyntax: sam help <component>; draft format: sam help format');
 }
