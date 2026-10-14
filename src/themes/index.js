@@ -1,4 +1,4 @@
-// Paper-only page CSS for sam.
+// Paper-only page CSS for sam (display styles; no toolbar / ask / reply / remark / lightbox / video).
 import { BASE_CSS, DIFF_CSS, DELTA_CSS, RTL_CSS, MATH_CSS } from '../assets.js';
 import { themes } from './registry.js';
 import { fontLanguages, langSelector } from './fonts.js';
@@ -21,11 +21,15 @@ const languageFontCss = () => fontLanguages().map((l) => block(langSelector(l, '
 
 const ownLanguageFont = (t) => fontLanguages().map((l) => block(langSelector(l, 'html', `[data-theme="${t.name}"][data-mode]`), { '--font-sans': t.tokens.common['--font-sans'] }));
 
-// Hide chrome left over from am base.css (toolbar / colophon / lightbox / reply) — sam pages never emit them.
-const SAM_CHROME_OFF = `
-.am-toolbar, .am-colophon, .am-lightbox, .am-update, .am-btn--update, .am-remark-pop, #am-source { display: none !important; }
-.am-delta-switch { display: none !important; }
-`;
+/** Feature-only CSS (math / diff / delta / rtl) — paired with an external paper.css via --css-href. */
+export function featureCss({ diff = false, delta = false, rtl = false, math = false } = {}) {
+  return [
+    ...(math ? [MATH_CSS] : []),
+    ...(diff ? [DIFF_CSS] : []),
+    ...(delta ? [DELTA_CSS] : []),
+    ...(rtl ? [RTL_CSS] : []),
+  ].join('\n\n');
+}
 
 export function pageCss(list = themes('page'), { diff = false, delta = false, rtl = false, math = false } = {}) {
   const decorations = list.filter((t) => t.css).map((t) => scoped(t.css, pageSel(t)));
@@ -35,16 +39,13 @@ export function pageCss(list = themes('page'), { diff = false, delta = false, rt
     ...languageFontCss(),
     ...ownFonts,
     BASE_CSS,
-    ...(math ? [MATH_CSS] : []),
-    ...(diff ? [DIFF_CSS] : []),
-    ...(delta ? [DELTA_CSS] : []),
-    ...(rtl ? [RTL_CSS] : []),
+    featureCss({ diff, delta, rtl, math }),
     ...decorations,
-    SAM_CHROME_OFF,
-  ].join('\n\n');
+  ].filter(Boolean).join('\n\n');
 }
 
-/** Full paper stylesheet (for external paper.css / iframe cache). */
-export function paperStylesheet({ diff = true, delta = true, rtl = true, math = true } = {}) {
+/** Shared paper stylesheet for `sam css` / iframe <link>: display base only (~paper tokens + panels/components).
+ *  Math / diff / delta / rtl stay out so the file stays lean; render with --css-href inlines those when needed. */
+export function paperStylesheet({ diff = false, delta = false, rtl = false, math = false } = {}) {
   return pageCss(themes('page'), { diff, delta, rtl, math });
 }

@@ -88,7 +88,7 @@ html:lang(he)[data-theme][data-mode] {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Hebrew", "Arial Hebrew", Arial, Roboto, "Helvetica Neue", sans-serif;
 }
 
-/* Answer me with HTML base — uses theme variables only, never hard-coded colors (theme tokens and decorations: themes/<name>.js). Exception: the var() fallbacks of diagrams (flow / sequence) equal the blueprint light tokens, guarded by a test. */
+/* sam paper base — display styles only (panels, markdown, diagrams, components). No toolbar / ask / reply / remark / lightbox / colophon. Theme tokens: themes/paper.js. Diagram var() fallbacks match blueprint light tokens. */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
@@ -98,30 +98,8 @@ body {
 }
 code, pre, kbd { font-family: var(--font-mono); }
 
-/* ── Toolbar ─────────────────────────────── */
-.am-toolbar {
-  position: fixed; top: 12px; inset-inline-end: 12px; z-index: 10; display: flex; gap: 6px;
-}
-.am-btn {
-  font: 12px/1 var(--font-sans); color: var(--ink); background: var(--paper);
-  border: 1px solid var(--line-2); border-radius: var(--radius); padding: 7px 10px; cursor: pointer;
-}
-.am-btn:hover { border-color: var(--ink-3); }
-.am-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-/* Theme and mode lists: a label and a native select inside one button-like box */
-.am-pick {
-  display: flex; align-items: center; gap: 6px; font: 12px/1 var(--font-sans); color: var(--ink-2); background: var(--paper);
-  border: 1px solid var(--line-2); border-radius: var(--radius); padding-block: 0; padding-inline: 10px 4px;
-}
-.am-pick:hover { border-color: var(--ink-3); }
-.am-pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-.am-pick select {
-  font: inherit; color: var(--ink); background: transparent; border: 0; padding: 6px 2px; cursor: pointer; outline: none;
-}
-.am-pick option { color: var(--ink); background: var(--paper); }
-
 /* ── Header ───────────────────────────────── */
-.am-head { margin: 0 0 20px; padding-inline-end: 300px; }
+.am-head { margin: 0 0 20px; }
 .am-head h1 { margin: 0; font-size: 24px; line-height: 1.25; letter-spacing: -0.01em; }
 .am-sub { margin: 4px 0 0; color: var(--ink-2); }
 .am-head-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12px; color: var(--ink-2); }
@@ -194,43 +172,6 @@ code, pre, kbd { font-family: var(--font-mono); }
   margin: 0; padding: 12px 14px; background: var(--fill); border: 1px solid var(--line-2);
   border-radius: var(--radius); overflow-x: auto; font-size: 12.5px; line-height: 1.5;
 }
-/* Ask: a decision the reader makes; the suggested option starts selected */
-.am-ask { margin: 10px 0; padding: 10px 12px 8px; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--fill); min-width: 0; }
-/* The question floats inside the box, so a long question wraps like text instead of riding on the border */
-.am-ask-q { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-weight: 600; }
-/* Two columns: the control, then the label, tag and note, which wrap under the label and never under the control */
-.am-ask-opt { clear: both; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: baseline; padding: 5px 2px; cursor: pointer; }
-.am-ask-opt input { margin: 0; accent-color: var(--accent); position: relative; top: 2px; }
-.am-ask-tag { display: inline-block; font-size: 11px; line-height: 1.5; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 6px; white-space: nowrap; }
-.am-ask-note { display: block; color: var(--ink-2); }
-/* Comment box under each panel, and the Reply sheet */
-.am-comment-btn {
-  display: flex; flex-shrink: 0; align-self: center; margin-block: 0; margin-inline: auto 6px; color: var(--ink-3); background: transparent;
-  border: 1px solid transparent; border-radius: var(--radius); padding: 3px; cursor: pointer;
-}
-.am-panel-meta + .am-comment-btn { margin-inline-start: 0; }
-.am-panel:hover .am-comment-btn, .am-comment-btn:focus-visible, .am-comment-btn[aria-expanded="true"] { border-color: var(--line-2); color: var(--ink-2); }
-.am-panel .am-comment-btn.am-comment-btn--on { color: var(--accent); border-color: var(--accent); }
-.am-panel--bare { position: relative; }
-.am-panel--bare > .am-comment-btn { position: absolute; top: 4px; inset-inline-end: 0; }
-.am-comment { padding: 0 14px 12px; }
-.am-comment textarea, .am-reply textarea {
-  width: 100%; font: 13px/1.5 var(--font-sans); color: var(--ink); background: var(--paper);
-  border: 1px solid var(--line-2); border-radius: var(--radius); padding: 8px 10px; resize: vertical;
-}
-.am-comment textarea:focus-visible, .am-reply textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.am-btn--reply { color: var(--paper); background: var(--ink); border-color: var(--ink); }
-.am-btn--reply:hover { opacity: .88; }
-.am-reply {
-  width: min(640px, calc(100vw - 32px)); padding: 16px; color: var(--ink); background: var(--paper);
-  border: 1px solid var(--line-2); border-radius: var(--radius); box-shadow: 0 12px 40px rgba(0,0,0,.25);
-}
-.am-reply::backdrop { background: rgba(0,0,0,.35); }
-.am-reply-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
-.am-reply-head span { color: var(--ink-2); font-size: 13px; }
-.am-reply textarea { font-family: var(--font-mono); font-size: 12.5px; }
-.am-reply-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
-.am-reply .am-btn:disabled { opacity: .5; cursor: default; }
 /* Code block: a header (title or path:lines, language, copy), then one span per line; numbered blocks show the line number in a gutter */
 .am-codeblock { margin: 10px 0; min-width: 0; }
 .am-codeblock .am-code { border-top-left-radius: 0; border-top-right-radius: 0; padding: 10px 0; }
@@ -410,100 +351,6 @@ code, pre, kbd { font-family: var(--font-mono); }
 .am-note { fill: var(--warn-bg, #fdf3e2); stroke: var(--warn, #a8620a); stroke-width: 1; }
 .am-diagram .am-step { fill: var(--ink-3, #8b929e); font: 10px var(--font-mono, monospace); }
 
-.am-diagram-expand {
-  /* In flow and sticky: it sits at the end edge (right on a left-to-right page) and stays in view when the diagram scrolls sideways.
-     It takes its own row above the drawing, so it never covers a node at the top-right corner of the drawing. */
-  position: sticky; inset-inline-start: calc(100% - 36px); z-index: 2;
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; padding: 0; margin: 0 0 4px; margin-inline: auto 8px;
-  color: var(--ink-2); background: var(--paper);
-  border: var(--bw, 1px) solid var(--line-2); border-radius: var(--radius);
-  cursor: pointer; opacity: 0.72;
-  transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
-}
-.am-diagram:hover .am-diagram-expand,
-.am-diagram-expand:focus-visible { opacity: 1; }
-.am-diagram-expand:hover {
-  opacity: 1; color: var(--ink); border-color: var(--accent); background: var(--fill);
-}
-.am-diagram-expand:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-
-/* ── Diagram Lightbox and Pan-Zoom Viewer ─────────── */
-.am-lightbox {
-  position: fixed; inset: 0; z-index: 1000;
-  display: flex; flex-direction: column;
-  touch-action: none;
-}
-.am-lightbox[hidden] { display: none !important; }
-
-.am-lightbox-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.am-lightbox-header {
-  position: absolute; top: 12px; left: 24px; right: 24px; height: 36px;
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 10; pointer-events: none;
-}
-.am-lightbox-title {
-  display: inline-flex; align-items: center; gap: 8px;
-  color: rgba(255, 255, 255, 0.92);
-  font: 13px/1 var(--font-sans, sans-serif); font-weight: 500;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-  pointer-events: auto;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw;
-}
-.am-lightbox-title svg { stroke: rgba(255, 255, 255, 0.85); flex-shrink: 0; }
-.am-lightbox-actions {
-  display: flex; align-items: center; gap: 8px; pointer-events: auto;
-}
-.am-lightbox-close {
-  width: 32px; height: 32px;
-  background: var(--paper);
-  border: var(--bw, 1px) solid var(--line-2);
-  border-radius: 50%;
-  color: var(--ink);
-  font-size: 15px; line-height: 1;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  transition: background 0.15s, color 0.15s, transform 0.15s, border-color 0.15s;
-}
-.am-lightbox-close:hover {
-  color: var(--accent); border-color: var(--accent); background: var(--fill); transform: scale(1.05);
-}
-.am-lightbox-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-
-.am-lightbox-stage {
-  position: absolute;
-  top: 54px; bottom: 20px; left: 24px; right: 24px;
-  background: var(--paper);
-  border: var(--bw, 1px) solid var(--line-2);
-  border-radius: max(var(--radius), 14px);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.am-lightbox-stage.am-panning { cursor: grabbing; }
-
-.am-lightbox-canvas {
-  position: absolute; left: 0; top: 0;
-  transform-origin: 0 0;
-  will-change: transform;
-  pointer-events: none;
-}
-.am-lightbox-canvas svg {
-  max-width: none !important;
-  max-height: none !important;
-  display: block;
-  font-family: var(--font-sans, sans-serif);
-}
-
 /* ── doc template ────────────────────────── */
 .am-doc { max-width: 1120px; margin: 0 auto; padding: 40px 28px 64px; }
 .am-doc-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 32px; align-items: start; }
@@ -520,7 +367,7 @@ code, pre, kbd { font-family: var(--font-mono); }
   .am-grid > .am-panel.am-span-wide { grid-column: 1 / -1 !important; }
 }
 @media (max-width: 760px) {
-  .am-sheet, .am-doc { padding: 56px 12px 24px; }
+  .am-sheet, .am-doc { padding: 24px 12px; }
   .am-head { padding-inline-end: 0; }
   .am-grid { grid-template-columns: minmax(0, 1fr); }
   .am-grid > .am-panel.am-span-wide { grid-column: auto !important; }
@@ -532,14 +379,9 @@ code, pre, kbd { font-family: var(--font-mono); }
      gives a table panel the width its columns read well at. */
   .am-md th, .am-md td { min-width: 8em; }
   .am-diagram svg { max-width: none; }
-  .am-lightbox-header { top: 8px; left: 12px; right: 12px; }
-  .am-lightbox-stage { top: 46px; bottom: 12px; left: 12px; right: 12px; border-radius: max(var(--radius), 10px); }
 }
-.am-colophon { margin: 0 0 8px; font: 11px var(--font-mono); color: var(--ink-3); }
-.am-colophon a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-
 @media print {
-  .am-toolbar, .am-diagram-expand, .am-lightbox, .am-code-copy, .am-comment-btn, .am-comment, .am-reply { display: none !important; }
+  .am-code-copy { display: none !important; }
   body { background: var(--paper); }
   .am-panel { break-inside: avoid; box-shadow: none; }
 }
@@ -553,40 +395,6 @@ code, pre, kbd { font-family: var(--font-mono); }
 .am-panel--bare > .am-panel-body { padding: 0; }
 .am-panel--bare .am-kv { background: var(--paper); }
 
-/* Remark mode: block marks with a note, collected into the Reply copy (src/runtime/remark.js). Each kind borrows a status colour of
-   the theme, so a mark reads in light and dark mode on every theme. */
-.am-btn--remark.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.am-remark-hover { outline: 1px dashed var(--ink-3); outline-offset: 2px; cursor: pointer; }
-:is(.am-mark, .am-remark-kind)[data-kind="suggestion"] { --mark: var(--warn); --mark-bg: var(--warn-bg); }
-:is(.am-mark, .am-remark-kind)[data-kind="keep"] { --mark: var(--ok); --mark-bg: var(--ok-bg); }
-:is(.am-mark, .am-remark-kind)[data-kind="question"] { --mark: var(--accent); --mark-bg: var(--accent-bg); }
-:is(.am-mark, .am-remark-kind)[data-kind="concern"] { --mark: var(--err); --mark-bg: var(--err-bg); }
-.am-mark { border-inline-start: 3px solid var(--mark); padding-inline-start: 10px; background: var(--mark-bg); border-radius: 1px; }
-/* The note chip sits inside the marked block (a table takes it as its caption, a list item puts it before its sub-list), so lists and
-   grids keep their children. */
-.am-mark-note {
-  display: block; margin-block-start: 4px; font: 12px/1.5 var(--font-sans); letter-spacing: normal; text-transform: none;
-  color: var(--ink-2); white-space: pre-wrap; caption-side: bottom; text-align: start;
-}
-.am-mark-note b { color: var(--ink); font-weight: 600; }
-caption.am-mark-note { display: table-caption; }
-/* Table rows have their own backgrounds, so a tint on the table would show on every other row only: the bar marks a table. */
-table.am-mark { background: none; }
-.am-remark-pop {
-  position: absolute; z-index: 40; width: min(264px, calc(100vw - 16px)); padding: 8px; display: grid; gap: 6px;
-  color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(0, 0, 0, .14);
-}
-.am-remark-pop[hidden] { display: none; }
-.am-remark-kinds { display: flex; gap: 6px; flex-wrap: wrap; }
-.am-remark-kind { font: 12px/1 var(--font-sans); color: var(--ink-2); background: var(--paper); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
-.am-remark-kind:hover { border-color: var(--ink-3); }
-.am-remark-kind[aria-pressed="true"] { color: var(--ink); border-color: var(--mark); background: var(--mark-bg); }
-.am-remark-kind:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.am-remark-pop textarea { font: 13px/1.5 var(--font-sans); color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 6px 8px; resize: vertical; }
-.am-remark-actions { display: flex; gap: 6px; }
-.am-remark-actions .am-btn:disabled { opacity: .5; cursor: default; }
-@media print { .am-remark-pop { display: none !important; } }
-
 
 html[data-theme="paper"]:lang(zh-Hant)[data-mode], html[data-theme="paper"]:lang(zh-TW)[data-mode], html[data-theme="paper"]:lang(zh-HK)[data-mode], html[data-theme="paper"]:lang(zh-MO)[data-mode] { --font-serif: "Iowan Old Style", Palatino, Georgia, "Songti TC", "PMingLiU", "MingLiU", "Noto Serif CJK TC", "Noto Serif TC", "Source Han Serif TC", "Songti SC", serif; }
 html[data-theme="paper"]:lang(ja)[data-mode] { --font-serif: "Iowan Old Style", Palatino, Georgia, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", "Noto Serif JP", "Songti SC", serif; }
@@ -596,11 +404,6 @@ html[data-theme="paper"] .am-head h1 { font-weight: 600; letter-spacing: 0; }
 html[data-theme="paper"] .am-md p, html[data-theme="paper"] .am-md li, html[data-theme="paper"] .am-md blockquote, html[data-theme="paper"] .am-intro { font-size: 15.5px; line-height: 1.75; }
 html[data-theme="paper"] .am-md p { margin-bottom: 12px; }
 html[data-theme="paper"] .am-md table { font-family: var(--font-sans); }
-
-
-.am-toolbar, .am-colophon, .am-lightbox, .am-update, .am-btn--update, .am-remark-pop, #am-source { display: none !important; }
-.am-delta-switch { display: none !important; }
-
 </style>
 </head>
 <body>

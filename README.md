@@ -15,7 +15,7 @@
 | ask 组件 | 有 | **无** |
 | STE / 面板规则 | 有 | **保留** |
 | 展示组件 | flow / sequence / tree / … | **同左**（无 ask） |
-| CSS | 默认内联全主题 | 内联 paper，或 `--css-href` + `sam css` 外置 |
+| CSS | 默认内联全主题 | 内联 paper 展示样式，或 `--css-href` + `sam css` 外置精简 sheet |
 
 Lab / iframe 场景优先用 sam：页更轻，不必再 strip 工具栏。
 

@@ -32,7 +32,7 @@ Usage:
                        [--template sheet|doc] [--style off|80|strict] [--mode auto|light|dark]
   ssam patch  <html> --panel <title> [file|-] [--from file] [--no-open]
   ssam lint   <file|->  [--style off|80|strict]
-  sam css    [-o paper.css]   write the shared paper stylesheet (for iframe <link>)
+  sam css    [-o paper.css]   write lean paper display CSS (for iframe <link>; math/diff/delta/rtl inlined on render)
   ssam config [set <key> <value> | get <key> | reset [key]]
   ssam serve  [--port 8765] [--lan] [--public-url <origin>]
   ssam clean  [--days 30] [--all] [--dry-run]
@@ -42,7 +42,7 @@ Usage:
 - Theme is always paper. No toolbar, colophon, reply/remark, or Agent round-trip JS.
 - `-` reads stdin (heredoc). Default output: ~/.sam/pages/ (SAM_HOME / AM_HOME overrides).
 - STE warnings: fix draft and re-run with --replace <page>.
-- --css-href emits <link rel="stylesheet"> instead of inlining CSS (pair with sam css).`;
+- --css-href emits <link rel="stylesheet"> for the shared paper.css; feature CSS is still inlined when needed.`;
 
 const FORMAT = `Draft format (extended Markdown)
 

@@ -5,7 +5,7 @@ import { parseDoc, ParseError, applyOverrides, CHOICES } from './parse.js';
 import { md, collectHtmlNotes } from './markdown.js';
 import { COMPONENTS, RAW_LANGS, ComponentError } from './components/index.js';
 import { TEMPLATES } from './templates/index.js';
-import { pageCss } from './themes/index.js';
+import { pageCss, featureCss } from './themes/index.js';
 import { BUILTIN, AUTO, pickTheme } from './themes/registry.js';
 import { lintDoc } from './lint/ste.js';
 import { esc } from './svg/text.js';
@@ -172,8 +172,15 @@ function shell({ meta, language, body, source, cssHref }) {
     rtl: language.dir === 'rtl',
     math: hasMath(body),
   };
+  // External paper.css is the lean display base; feature CSS (math/diff/delta/rtl) is inlined when needed.
   const cssBlock = cssHref
-    ? `<link rel="stylesheet" href="${esc(cssHref)}">`
+    ? `<link rel="stylesheet" href="${esc(cssHref)}">${(() => {
+      const extra = featureCss(cssOpts);
+      return extra ? `
+<style>
+${extra}
+</style>` : '';
+    })()}`
     : `<style>
 ${pageCss(BUILTIN.embedFor('paper', 'page'), cssOpts)}
 </style>`;
