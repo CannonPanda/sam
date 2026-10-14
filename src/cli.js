@@ -1,4 +1,4 @@
-// sam CLI: render / patch / lint / css / list / help / config / serve / clean. main() takes injected streams and environment variables, for testing.
+// sam CLI: render / patch / lint / css / list / help / config / clean. main() takes injected streams and environment variables, for testing.
 
 import { parseArgs } from 'node:util';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
@@ -8,11 +8,11 @@ import { spawn } from 'node:child_process';
 import { renderDoc, RenderError, LintError } from './render.js';
 import { parseDoc, ParseError, CHOICES } from './parse.js';
 import { lintDoc, formatWarning } from './lint/ste.js';
+import { lintContent } from './lint/leak.js';
 import { resolveLanguage } from './language.js';
 import { COMPONENTS } from './components/index.js';
 import { themeNames, loadThemes } from './themes/registry.js';
 import { afterRender, clean, usage, mb, CLEAN } from './housekeeping.js';
-import { runUpdateCheck } from './update.js';
 import { amHome, readConfig, setConfig, resetConfig, configChoices, CONFIG_KEYS, ConfigError } from './config.js';
 import { ensureHome } from './home.js';
 import { loadMath } from './math-load.js';
@@ -21,7 +21,6 @@ import { readState } from './state.js';
 import { readPage } from './page.js';
 import { readEmbeddedImages } from './images.js';
 import { readEmbeddedCode, MAX_CODE_LINES, LONG_CODE_LINES } from './code.js';
-import { runServe, serveLink, DEFAULT_PORT } from './serve.js';
 
 const MAX_LISTED_WARNINGS = 20;
 
@@ -34,7 +33,6 @@ Usage:
   sam lint   <file|->  [--style off|80|strict]
   sam css    [-o paper.css]   write lean paper display CSS (for iframe <link>; math/diff/delta/rtl inlined on render)
   sam config [set <key> <value> | get <key> | reset [key]]
-  sam serve  [--port 8765] [--lan] [--public-url <origin>]
   sam clean  [--days 30] [--all] [--dry-run]
   sam list
   sam help [component|format|code|image|patch|html|svg]
@@ -204,13 +202,11 @@ export async function main(argv, io = {}) {
     case 'config': return cmdConfig([arg, ...rest].filter((x) => x !== undefined), ctx);
     case 'css': return cmdCss(opts, ctx);
     case 'clean': return cmdClean(opts, { print, fail, env });
-    case 'serve': return cmdServe(opts, { print, fail, env });
-    case '__update-check': return (await runUpdateCheck(amHome(env))) ? 0 : 1;
     case 'list': return cmdList(ctx), 0;
     case 'help': return cmdHelp(arg, { print, fail });
     default:
-      if (cmd === 'video' || cmd === 'theme') {
-        fail(`✗ sam has no "${cmd}" command (paper-only; use answer-me-with-html for video / multi-theme).\n\n${USAGE}`);
+      if (cmd === 'video' || cmd === 'theme' || cmd === 'serve') {
+        fail(`✗ sam has no "${cmd}" command (paper-only; use answer-me-with-html for video / multi-theme / serve).\n\n${USAGE}`);
         return 2;
       }
       fail(`✗ Unknown command "${cmd}"\n\n${USAGE}`);
@@ -402,9 +398,6 @@ function writePage(file, html, env) {
 function emit(result, file, { print, env }, note = '') {
   writePage(file, result.html, env);
   print(`✓ ${file}`);
-  // With sam serve running, a page inside the data directory also gets an http link.
-  const link = serveLink(amHome(env), file);
-  if (link) print(`  link: ${link}`);
   print(`  ${summaryLine(result)}${note}`);
   // The code the page now holds, so the user can check it before sharing the page.
   if (result.stats.code?.length) print(`  code embedded from: ${result.stats.code.join(', ')}`);
@@ -458,18 +451,15 @@ const count = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`;
 
 // Wrap-up after a successful render: print maintenance notices, open the browser per config. io.open can inject the opener.
 function finish(file, opts, config, ctx) {
-  printHints(config, ctx);
+  printHints(ctx);
   if (shouldOpen(opts, ctx.env, config.values)) (ctx.io.open ?? openFile)(file);
   return 0;
 }
 
-// Notices attached after a successful render (cleanup, update), for the Agent, which asks the user.
-function printHints(config, { env, io, print }) {
+// Notices attached after a successful render (cleanup), for the Agent, which asks the user.
+function printHints({ env, print }) {
   try {
-    const hints = afterRender({
-      home: amHome(env), env, config: config.values, current: VERSION,
-      scriptPath: io.scriptPath, background: Boolean(io.background),
-    });
+    const hints = afterRender({ home: amHome(env) });
     hints.forEach((h) => print(h));
   } catch {
     // A maintenance-notice error does not affect the render result.
@@ -494,15 +484,6 @@ function cmdClean(opts, { print, fail, env }) {
   return 0;
 }
 
-function cmdServe(opts, { print, fail, env }) {
-  if (opts.port !== undefined && !(/^\d+$/.test(opts.port.trim()) && Number(opts.port) <= 65535)) {
-    fail('✗ --port needs a number from 0 to 65535 (0 picks a free port)');
-    return 2;
-  }
-  const port = opts.port === undefined ? DEFAULT_PORT : Number(opts.port);
-  return runServe({ home: amHome(env), port, lan: !!opts.lan, publicUrl: opts['public-url'], print, fail });
-}
-
 function cmdLint(src, opts, { print, fail }) {
   let doc;
   try {
@@ -520,7 +501,16 @@ function cmdLint(src, opts, { print, fail }) {
   const language = resolveLanguage({ declared: doc.meta.lang, text: src });
   const warnings = style === 'off' ? [] : lintDoc(doc, language);
   printWarnings(warnings, print, style);
-  return style === 'strict' && warnings.length ? 1 : 0;
+  // The content check is not part of style: a planning leak is wrong at style: off too, so it always runs and always fails the run.
+  const content = lintContent(doc);
+  printContent(content, print);
+  return (style === 'strict' && warnings.length) || content.length ? 1 : 0;
+}
+
+function printContent(issues, print) {
+  if (!issues.length) return print('  Content ✓ no planning leak');
+  print(`  Content ${count(issues.length, 'issue')} (always on, even with --style off; these reach the reader — fix the draft and run again):`);
+  issues.forEach((i) => print(`  ${formatWarning(i)}`));
 }
 
 function printWarnings(warnings, print, style) {

@@ -19,7 +19,6 @@ export const CONFIG_KEYS = Object.freeze({
   theme: { type: 'enum', choices: CHOICES.theme, default: 'paper', label: 'Theme (sam is paper-only)' },
   mode: { type: 'enum', choices: CHOICES.mode, default: 'auto', label: 'Default light/dark mode' },
   style: { type: 'enum', choices: CHOICES.style, default: '80', label: 'STE writing-check strictness' },
-  update_check: { type: 'bool', default: false, label: 'Check for a new version (off by default in sam)' },
 });
 
 const TRUE = new Set(['on', 'true', 'yes', '1', '开', '开启', '打开']); // lang-ok: accepted Chinese input aliases

@@ -11,9 +11,12 @@
 | 主题 | paper / blueprint / shadcn / 3b1b + 自定义 | **仅 paper** |
 | 页内工具栏 | 主题切换、回复、标注、复制源稿 | **无** |
 | 运行时 JS | 布局/回复/灯箱/更新等 | **无**（纯展示） |
+| 本地 dev server | `am serve`（含 `--lan`） | **无** |
+| 联网更新检查 | 有 | **无**（渲染全程离线） |
 | 视频 | `am video` | **无** |
 | ask 组件 | 有 | **无** |
 | STE / 面板规则 | 有 | **保留** |
+| 内容检查 | 独立脚本 | **内联 `sam lint`** |
 | 展示组件 | flow / sequence / tree / … | **同左**（无 ask） |
 | CSS | 默认内联全主题 | 内联 paper 展示样式，或 `--css-href` + `sam css` 外置精简 sheet |
 
@@ -54,7 +57,7 @@ B -> C[HTML]
 ```
 EOF
 
-# STE 检查
+# STE + 内容检查（泄漏 / limits 误用）
 sam lint draft.md
 
 # 外置 CSS（iframe 缓存）
@@ -72,15 +75,19 @@ sam render draft.md -o out.html --css-href paper.css --no-open
 ## 检查
 
 ```bash
-npm run build
-npm run check             # 机读：USAGE/SKILL/kv CSS/limits 语义锚点等
-npm run test:leakage      # 指令泄漏 + limits 滥用夹具（含 Lab 反例）
-npm run test:kv           # kv 1–6 渲染 +（有 Chrome 时）布局探测
-npm run test:agent-cases  # 期望草稿可渲染（非真实模型测试）
-npm test                  # 上述机读检查合集
+npm run build     # 重建 skills/sam/scripts/sam.mjs（改过 src/ 必跑）
+npm test          # 渲染全部示例 + lint + 内容检查的 11 项断言
+npm run css       # 重新生成 docs/paper.css
 ```
 
-第三轮重点：阶段 A 规划不得写入读者正文；`limits` 仅真实配额；强制图须有项目特有信息价值；不套 A/B/C/D。详见 `skills/sam/SKILL.md` 与 `tests/leakage/`、`tests/agent-cases/`。
+`sam lint` 是内容质量的唯一闸门，两类结果：
+
+- **STE 警告** — 受 `--style off|80|strict` 控制
+- **`Content N issues`** — 规划口令泄漏 / `limits` 主观打分误用，**不受 `style: off` 影响**，中英文写法都抓，图内文字和面板标题也一起查
+
+页面主题本身就是 sam / 组件规则时，在 frontmatter 加 `sam_meta: true` 免除内容检查。
+
+规则细则见 `skills/sam/SKILL.md`。
 
 ## 许可
 

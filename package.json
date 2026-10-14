@@ -1,7 +1,7 @@
 {
   "name": "sam",
   "version": "0.1.0",
-  "description": "sam — Simple answer me with html：纸张主题讲义页，无工具栏/运行时；保留 STE 与展示组件。",
+  "description": "sam — Simple answer me with html：纸张主题讲义页，无工具栏/运行时/联网；保留 STE 与展示组件。",
   "type": "module",
   "bin": {
     "sam": "bin/sam.js"
@@ -19,11 +19,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "css": "node bin/sam.js css -o docs/paper.css",
-    "check": "node scripts/check-sam.mjs",
-    "test:kv": "node scripts/test-kv-layout.mjs",
-    "test:agent-cases": "node scripts/test-agent-cases.mjs",
-    "test:leakage": "node scripts/check-leakage.mjs",
-    "test": "node scripts/check-sam.mjs && node scripts/check-leakage.mjs && node scripts/test-agent-cases.mjs && node scripts/test-kv-layout.mjs"
+    "test": "node scripts/smoke.mjs"
   },
   "keywords": [
     "llm",
